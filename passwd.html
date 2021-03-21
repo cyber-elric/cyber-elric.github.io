@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link href="css/code.css" rel="stylesheet"/>
+    <link href="css/passwd.css" rel="stylesheet"/>
     <link rel="shortcut icon" href="img/favicon.ico"/>
     <title>password</title>
 <head>
@@ -11,28 +11,25 @@
 <body >
     <div>
         <h1>Password</h1>
-
         <div class="inputBox">
-            {{ tempPasswordForm.protect }}
+            <input class="textBox" id="pswd" type="text" placeholder="密保">
         </div>
         <div class="inputBox">
-            {{ tempPasswordForm.app }}
+            <input class="textBox" id="app" type="text" placeholder="用处">
         </div>
         <div class="inputBox">
-            {{ tempPasswordForm.length }}
+            <input class="textBox" id="length" type="text" placeholder="长度">
         </div>
-        <div class="checkBox"><label><input name="check" type="checkbox" value="True">特殊字符</label></div>
+        <div class="checkBox"><label><input name="check" type="checkbox" placeholder="True">特殊字符</label></div>
         <input class="btn1" type="submit" value='现'>
 
     </div>
     <br/><br/><br/>
     <div align="center">
-        {% if passwd %}
             <br/>
             <input id='cp' type="text" value="">
             <br/>
             <button class="btn2" onclick="clip()">抄</button>
-        {% endif %}
     </div>
 
     <script>

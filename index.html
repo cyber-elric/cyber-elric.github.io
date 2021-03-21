@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <style type="text/css">
         .container .content {
-	        background-image: url('https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN');
+	        background-image: url('img/bing.jpg');
         }
     </style>
-    <link rel="stylesheet" type="text/css" href="css/gate.css"/>
+    <link rel="stylesheet" type="text/css" href="css/index.css"/>
     <link rel="shortcut icon" href="img/favicon.ico"/>
     <title>Gate</title>
 </head>
@@ -20,9 +20,9 @@
                 <h1>Gate</h1>
                 <div class="inputBox">
                     <i class="demo-icon">&#xe803;</i>
-                    <input class="textBox" id="safe" type="text" value="Safe Announcement">
+                    <input class="textBox" id="safe" type="text" placeholder="Safe Announcement">
                 </div>
-                <input class="btn" type="submit" value="开">
+                <input class="btn" type="button" onclick="sign_in()" value="开">
             </div>
         </div>
     </div>
@@ -36,6 +36,14 @@
             content.style.height = height+'px';
         })();
 
+        function sign_in() {
+            var reply, answer;
+            answer = new Array("黑域", "光墓", "慢雾", "无故事王国", "低光速黑洞")
+            reply = document.getElementById('safe');
+            if(answer.indexOf(reply) != -1) {
+                windows.location.replace("https://cyber-elric.github.io/passwd")
+            }
+        }
     </script>
 </body>
 </html>
