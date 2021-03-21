@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <style type="text/css">
+        .container .content {
+	        background-image: url('https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN');
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="css/gate.css"/>
+    <link rel="shortcut icon" href="img/favicon.ico"/>
+    <title>Gate</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="content" id="content">
+            <div class="box">
+                <h1>Gate</h1>
+                <div class="inputBox">
+                    <i class="demo-icon">&#xe803;</i>
+                    <input class="textBox" id="safe" type="text" value="Safe Announcement">
+                </div>
+                <input class="btn" type="submit" value="开">
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function() {
+            var width, height, largeHeader;
+            width = window.innerWidth;
+            height = window.innerHeight;
+            content = document.getElementById('content');
+            content.style.height = height+'px';
+        })();
+
+    </script>
+</body>
+</html>
