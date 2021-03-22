@@ -19,7 +19,6 @@
             <div class="box">
                 <h1>Gate</h1>
                 <div class="inputBox">
-                    <label></label>
                     <i class="demo-icon">&#xe803;</i>
                     <input class="textBox" id="safe" type="text" placeholder="Safe Announcement">
                 </div>
@@ -43,7 +42,7 @@
             var reply, answer;
             answer = new Array("黑域", "光墓", "慢雾", "无故事王国", "低光速黑洞")
             reply = document.getElementById('safe');
-            if(answer.indexOf(reply) != -1) {
+            if(answer.indexOf(reply.value) != -1) {
                 windows.location.replace("https://cyber-elric.github.io/passwd")
             }
         }

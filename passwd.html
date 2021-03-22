@@ -21,22 +21,29 @@
             <input class="textBox" id="length" type="text" placeholder="长度">
         </div>
         <div class="checkBox"><label><input name="check" type="checkbox" placeholder="True">特殊字符</label></div>
-        <input class="btn1" type="submit" value='现'>
+        <input class="btn1" type="button" value='现'>
 
-    </div>
-    <br/><br/><br/>
-    <div align="center">
-            <br/>
-            <input id='cp' type="text" value="">
-            <br/>
-            <button class="btn2" onclick="clip()">抄</button>
     </div>
 
     <script>
-        function clip() {
-            var i = document.getElementById('cp');
-            i.select();
+        function easter_egg() {
+            var i1, i2, i3;
+            i1 = document.getElementById('pswd').value;
+            i2 = document.getElementById('app').value;
+            i3 = document.getElementById('length').value;
+
+            if(i1 == "lsb" && i2 == "lsp" && i3 == "156") {
+                window.location.href("https://cyber-elric.github.io/lsp");
+            }
+
+            var pswd, ap, cod;
+            pswd = window.btoa(i1);
+            ap = window.btoa(i2);
+            cod = window.btoa(pswd + ap);
+            cod = cod.substr(2, parseInt(i3));
+            cod.select();
             document.execCommand('copy');
+            alert(cod);
         }
     </script>
 </body>

@@ -4,17 +4,12 @@ body {
     background-color: #ffffff;
 }
 
-a:link, a:visited, a:hover {
-    text-decoration: none;
-}
-a {
+h1 {
     position: relative;
     left: 42%;
     width: 200px;
     padding-left: 1em;
     display: block;
-}
-h1 {
     color: black;
     font-size: 36px;
     font-family: Arial, sans-serif;
@@ -28,7 +23,7 @@ h1 {
 	border-radius: 50px;
 	position: relative;
 	top: 50%;
-	left: 38%;
+	left: 39%;
 	border: black 2px solid !important;
 }
 .textBox {
