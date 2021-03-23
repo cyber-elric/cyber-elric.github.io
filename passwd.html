@@ -20,30 +20,56 @@
         <div class="inputBox">
             <input class="textBox" id="length" type="text" placeholder="长度">
         </div>
-        <div class="checkBox"><label><input name="check" type="checkbox" placeholder="True">特殊字符</label></div>
         <input class="btn1" type="button" onclick="easter_egg()" value='现'>
 
     </div>
 
     <script>
+        document.onkeydown = kb;
+        function kb() {
+            if(event.keyCode == 13) {
+                easter_egg()
+            }
+        }
+
         function easter_egg() {
             var i1, i2, i3;
             i1 = document.getElementById('pswd').value;
             i2 = document.getElementById('app').value;
             i3 = document.getElementById('length').value;
 
-            if(i1 == "lsb" && i2 == "lsp" && i3 == "156") {
-                window.location.href("https://cyber-elric.github.io/lsp");
+            if(isNaN(i3)) {
+                alert("长度要填数字");
+                return 0;
             }
 
-            var pswd, ap, cod;
+            if(i1 == "lsb" && i2 == "lsp" && i3 == "156") {
+                window.location.assign("./lsp.html");
+            }
+            else {
+                password(i1, i2, i3);
+            }
+        }
+
+        function password(i1, i2, i3) {
+            i1 = escape(i1);
+            i2 = escape(i2);
+            var pswd, ap, cod, temp;
             pswd = window.btoa(i1);
+            pswd = window.btoa(pswd);
             ap = window.btoa(i2);
+            ap = window.btoa(ap);
             cod = window.btoa(pswd + ap);
+            cod = window.btoa(cod);
             cod = cod.substr(2, parseInt(i3));
-            cod.select();
-            document.execCommand('copy');
-            alert(cod);
+            prompt("生成的密码：", cod);
+            temp = document.createElement("input");
+            temp.setAttribute("type", "text");
+            temp.setAttribute("value", cod);
+            temp.setAttribute("style", "opacity:0");
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('Copy');
         }
     </script>
 </body>
