@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: 'get bing daily wallpaper'
+name: get bing daily wallpaper
 
 # Controls when the action will run. 
 on:
@@ -32,12 +32,21 @@ jobs:
         python-version: 3.7
     # - name: 'Install dependencies'
     #   run: python -m pip install --upgrade pip
-    - name: 'Install requirements'
+    - name: Install requirements
       run:
         pip install -r ./requirements.txt
-    - name: 'py'
+    - name: py
+      run:
+        python bing.py
+    - name: commit
       run: |
-        python bing.py,
+        git config --local user.email "elricleung@126.com",
+        git config --local user.name "cyber-elric",
         git add bing.jpg,
-        git commit -m 'bing wallpaper',
-        git push origin main.
+        git commit -m 'bing wallpaper'
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secret.MY_GIT_TOKEN }}
+        branch: main
+        
