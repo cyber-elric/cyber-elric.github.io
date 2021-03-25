@@ -5,8 +5,8 @@ name: get bing daily wallpaper
 # Controls when the action will run. 
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
-  # push:
-    # branches: [ main ]
+  push:
+    branches: [ main ]
   # pull_request:
     # branches: [ main ]
   schedule:
@@ -47,6 +47,6 @@ jobs:
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
-        github_token: ${{ secret.MY_GIT_TOKEN }}
+        github_token: ${{ secrets.MY_GIT_TOKEN }}
         branch: main
         
