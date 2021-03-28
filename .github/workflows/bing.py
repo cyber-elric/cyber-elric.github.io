@@ -1,4 +1,4 @@
-# # coding = utf8
+# coding = utf8
 
 import requests
 import json
@@ -26,5 +26,5 @@ def get_the_wallpaper():
             pass
 
 
-if __name__=='__main':
+if __name__=='__main__':
     get_the_wallpaper()
