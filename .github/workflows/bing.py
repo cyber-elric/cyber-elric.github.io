@@ -9,7 +9,7 @@ from time import strftime, localtime
 
 # 获取bing每日壁纸,下载图片模式
 def get_the_wallpaper():
-    fileName = 'bing.jpg'
+    fileName = '../../img/bing.jpg'
     if not exists(fileName) or strftime("%Y%m%d", localtime(stat(fileName).st_mtime)) != strftime("%Y%m%d", localtime()):
         bingURL = 'https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN'
         headers = {
