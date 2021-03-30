@@ -48,6 +48,7 @@ jobs:
         run: |
           git config --local user.email "elricleung@126.com"
           git config --local user.name "cyber-elric"
+          git pull origin main
           git add .
           git commit -m 'bing wallpaper' -a
           
