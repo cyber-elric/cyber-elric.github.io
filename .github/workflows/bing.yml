@@ -46,10 +46,9 @@ jobs:
           git config --local user.email elricleung@126.com
           git config --local user.name cyber-elric
           git add .
-          git commit -m 'bing wallpaper' -a
+          git commit -m 'bing daily wallpaper' -a
           
-      - name: Push changes
-        uses: ad-m/github-push-action@master
+      - uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           
