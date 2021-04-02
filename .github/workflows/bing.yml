@@ -32,13 +32,13 @@ jobs:
           python-version: 3.8
       
       - name: requirements
-        run: |
-          cd img
+        run: 
+          # cd img
           pip install -r requirements.txt
           
       - name: py
-        run: |
-          cd img
+        run: 
+          # cd img
           python bing.py
           
       - name: commit
