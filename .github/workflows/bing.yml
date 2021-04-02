@@ -33,12 +33,12 @@ jobs:
       
       - name: requirements
         run: |
-          # cd img
+          cd img
           pip install -r requirements.txt
           
       - name: py
         run: |
-          # cd img
+          cd img
           python bing.py
           
       - name: commit
