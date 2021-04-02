@@ -33,18 +33,19 @@ jobs:
       
       - name: requirements
         run: |
-          cd img
+          # cd img
           pip install -r requirements.txt
           
       - name: py
-        run: 
+        run: |
+          # cd img
           python bing.py
           
       - name: commit
         run: |
           git config --local user.email elricleung@126.com
           git config --local user.name cyber-elric
-          git add .
+          git add ../../img/bing.jpg
           git commit -m 'bing wallpaper' -a
           
       - name: Push changes
