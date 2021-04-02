@@ -4,7 +4,7 @@ import requests
 import json
 
 def bing_daily_wallpaper():
-  fileName = 'bing.jpg'
+  fileName = 'img/bing.jpg'
   bingURL = 'https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN'
   headers = {
       'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) Chrome/52.0.2743.116 '
