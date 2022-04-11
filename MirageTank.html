@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" nameWytk="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+    <title>无影坦克</title>
+</head>
+
+<body>
+    <div style="padding:0 16px" align="center">
+        <details>
+            <summary>无影坦克</summary>
+            <details>
+                <summary>Encode</summary>
+                <span>选择表图</span><br><input type="file" id="ipt1Wytk" onchange="ipt1Wytk()" accept="image/*">
+                <br>
+                <span>选择里图</span><br><input type="file" id="iptWytk" onchange="iptWytk()" accept="image/*">
+                <br>
+                <span>添加备注</span><input id="beizhucheckbox" type="checkbox" checked="true">
+                <br><input type="text" id="beizhu" style="width:150px" value="TK">
+                <br>
+                <span>表图压缩度 </span><select id="select" onchange="select()">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4" selected="true">4</option>
+                </select>
+                <br>
+                <span id="info1">里图小于2M</span>
+                <br>
+                <button onclick="a1()">合成图片</button>
+                <br>
+                <img id="img1">
+                <br>
+                <a href="" id="a1" style="display:none">save</a>
+            </details>
+            <br /><br />
+            <h3>Decode</h3>
+            <input type="file" id="ipt2Wytk" onchange="ipt2Wytk()" accept="image/*">
+            <div id="info2a" style="display:none">
+                <span id="info2"></span><span> </span>
+                <br>
+                <a href="" id="a2">save</a>
+            </div>
+            <img src="" id="img2">
+        </details>
+
+    </div>
+
+
+    <script>
+        function utf8EncodeWytk(string) {
+            var utftext = "";
+            for (var n = 0; n < string.length; n++) {
+                var c = string.charCodeAt(n);
+                if (c < 128) {
+                    utftext += String.fromCharCode(c);
+                } else if ((c > 127) && (c < 2048)) {
+                    utftext += String.fromCharCode((c >> 6) | 192);
+                    utftext += String.fromCharCode((c & 63) | 128);
+                } else {
+                    utftext += String.fromCharCode((c >> 12) | 224);
+                    utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+                    utftext += String.fromCharCode((c & 63) | 128);
+                }
+            }
+            return utftext;
+        }
+
+        function utf8DecodeWytk(inputStr) {
+            var outputStr = "";
+            var code1, code2, code3, code4;
+            for (var i = 0; i < inputStr.length; i++) {
+                code1 = inputStr.charCodeAt(i);
+                if (code1 < 128) {
+                    outputStr += String.fromCharCode(code1);
+                } else if (code1 < 224) {
+                    code2 = inputStr.charCodeAt(++i);
+                    outputStr += String.fromCharCode(((code1 & 31) << 6) | (code2 & 63));
+                } else if (code1 < 240) {
+                    code2 = inputStr.charCodeAt(++i);
+                    code3 = inputStr.charCodeAt(++i);
+                    outputStr += String.fromCharCode(((code1 & 15) << 12) | ((code2 & 63) << 6) | (code3 & 63));
+                } else {
+                    code2 = inputStr.charCodeAt(++i);
+                    code3 = inputStr.charCodeAt(++i);
+                    code4 = inputStr.charCodeAt(++i);
+                    outputStr += String.fromCharCode(((code1 & 7) << 18) | ((code2 & 63) << 12) | ((code3 & 63) << 6) | (code2 & 63));
+                }
+            }
+            return outputStr;
+        }
+    </script>
+
+    <script>
+        let IMG1 = new Image();
+        let IMGINFO = [];
+        let IMG2 = new Image();
+        let MODE = 4;
+        let SRC1 = "";
+        let SRC2 = "";
+        function a1() {
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    try {
+                        let f = gen(MODE);
+                        if (SRC1) { URL.revokeObjectURL(SRC1) }
+                        SRC1 = URL.createObjectURL(f);
+                        document.getElementById("a1").href = SRC1;
+                        document.getElementById("img1").src = SRC1;
+                        document.getElementById("a1").style.display = "inline";
+                        document.getElementById("a1").download = "download.png"
+                    } catch (e) { alert("图片生成失败") }
+                })
+            })
+        }
+        function a2() {
+            try {
+                let f = sol();
+                if (SRC2) { URL.revokeObjectURL(SRC2) }
+                SRC2 = URL.createObjectURL(f[0]);
+                document.getElementById("a2").href = SRC2;
+                document.getElementById("img2").src = SRC2;
+                document.getElementById("info2a").style.display = "block";
+                document.getElementById("a2").download = f[1];
+                document.getElementById("info2").innerHTML = f[1]
+            } catch (e) { alert("图片读取失败") }
+        }
+        function select() {
+            let l = [0, "500K", "1M", "1.5M", "2M"]
+            MODE = parseInt(document.getElementById("select").value);
+            document.getElementById("info1").innerHTML = "建议里图大小：小于" + l[MODE]
+        }
+        function ipt1Wytk() {
+            var oFReader = new FileReader();
+            var ofile = document.getElementById("ipt1Wytk").files[0];
+            oFReader.readAsDataURL(ofile);
+            oFReader.onloadend = function (oFRevent) {
+                var osrc = oFRevent.target.result;
+                IMG1.src = osrc;
+            }
+        }
+
+        function iptWytk() {
+            var oFReader = new FileReader();
+            var ofile = document.getElementById("iptWytk").files[0];
+            oFReader.readAsArrayBuffer(ofile);
+            oFReader.onloadend = function (oFRevent) {
+                try {
+                    let l = new Uint8Array(oFRevent.target.result);
+                    IMGINFO = [[l.length, utf8EncodeWytk(ofile.name), ofile.type], l];
+                } catch (e) { }
+            }
+        }
+
+        function ipt2Wytk() {
+            var oFReader = new FileReader();
+            var ofile = document.getElementById("ipt2Wytk").files[0];
+            oFReader.readAsDataURL(ofile);
+            oFReader.onloadend = function (oFRevent) {
+                var osrc = oFRevent.target.result;
+                IMG2.src = osrc;
+                IMG2.onload = function () {
+                    a2()
+                }
+            }
+        }
+
+
+        function dataURLtoBlob(dataurl) {
+            var arr = dataurl.split(',');
+            var _arr = arr[1];
+            var mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(_arr),
+                n = bstr.length,
+                u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr.buffer], { type: mime });
+        }
+
+        function gen(mode) {
+            let modelist = [0, 3, mode];
+            let word = IMGINFO[0].join(String.fromCharCode(1)) + String.fromCharCode(0);
+            let length = 2 + parseInt((word.length + IMGINFO[1].length) * 8 / (mode * 3))
+            let ax = Math.sqrt(length / (IMG1.width * IMG1.height));
+            let wid = Math.ceil(IMG1.width * ax);
+            let hit = Math.ceil(IMG1.height * ax);
+            let cv = document.createElement("canvas");
+            let cvd = cv.getContext("2d");
+            cv.width = wid;
+            cv.height = hit;
+            cvd.fillStyle = "#ffffff";
+            cvd.fillRect(0, 0, wid, hit);
+            cvd.drawImage(IMG1, 0, 0, wid, hit);
+
+            if (document.getElementById("beizhucheckbox").checked) {
+                let w = document.getElementById("beizhu").value;
+                cvd.font = "16px Arial";
+                cvd.textBaseline = "middle";
+                cvd.fillStyle = "rgba(255,255,255,0.75)";
+                cvd.fillRect(0, 0, cvd.measureText(w).width + 8, 28);
+                cvd.fillStyle = "#000000";
+                cvd.fillText(w, 4, 14, wid - 8);
+            }
+
+            return new File([dataURLtoBlob(en(mode, modelist, cvd.getImageData(0, 0, wid, hit), word, IMGINFO[1], " wytk.github.io"))], "download.png", { type: "image/png" })
+        }
+
+        function sol() {
+            let cv = document.createElement("canvas");
+            let cvd = cv.getContext("2d");
+            cv.width = IMG2.width;
+            cv.height = IMG2.height;
+            cvd.drawImage(IMG2, 0, 0);
+            let imgdata = cvd.getImageData(0, 0, IMG2.width, IMG2.height);
+            if (imgdata.data[0] % 8 != 0 || imgdata.data[1] % 8 != 3 || imgdata.data[2] % 8 == 0 || imgdata.data[2] % 8 > 5) {
+                throw "error"
+            }
+            let klist = de(imgdata.data[2] % 8, imgdata);
+            let file = new File([klist[1].buffer], utf8DecodeWytk(klist[0][1]), { type: klist[0][2] })
+            return [file, utf8DecodeWytk(klist[0][1])]
+        }
+
+
+        function closer(mode, m, n) {
+            let a = m % mode
+            if (255 - m <= mode / 2 || m < mode / 2) {
+                return parseInt(m / mode) * mode + n
+            } else if (n - a > mode / 2) {
+                return parseInt(m / mode) * mode + n - mode
+            } else if (a - n >= mode / 2) {
+                return parseInt(m / mode) * mode + n + mode
+            } else {
+                return parseInt(m / mode) * mode + n
+            }
+        }
+
+
+        function en(mode, fplist, imgdata, aword, blist, cword) {
+            let aa = Math.ceil(8 / 3 / mode);
+            let n = imgdata.width * imgdata.height;
+            let j = 0;
+            let k = "";
+            let i = 1;
+            let mlist = [1, 2, 4, 8, 16, 32, 64, 128];
+            let cv = document.createElement("canvas");
+            let cvd = cv.getContext("2d");
+            cv.width = imgdata.width;
+            cv.height = imgdata.height;
+            imgdata.data[0] = closer(8, imgdata.data[0], fplist[0]);
+            imgdata.data[1] = closer(8, imgdata.data[1], fplist[1]);
+            imgdata.data[2] = closer(8, imgdata.data[2], fplist[2]);
+            while (i < n && j < aword.length) {
+                k = k + (aword.charCodeAt(j) + 256).toString(2).slice(1);
+                for (let ii = 0; ii < aa; ii++) {
+                    if (k.length >= mode * 3) {
+                        imgdata.data[4 * i] = closer(mlist[mode], imgdata.data[4 * i], parseInt(k.slice(0, mode), 2));
+                        imgdata.data[4 * i + 1] = closer(mlist[mode], imgdata.data[4 * i + 1], parseInt(k.slice(mode, mode * 2), 2));
+                        imgdata.data[4 * i + 2] = closer(mlist[mode], imgdata.data[4 * i + 2], parseInt(k.slice(mode * 2, mode * 3), 2));
+                        k = k.slice(mode * 3);
+                        i++
+                    }
+                }
+                j++
+            }
+            j = 0;
+            while (i < n && j < blist.length) {
+                k = k + (blist[j] + 256).toString(2).slice(1);
+                for (let ii = 0; ii < aa; ii++) {
+                    if (k.length >= mode * 3) {
+                        imgdata.data[4 * i] = closer(mlist[mode], imgdata.data[4 * i], parseInt(k.slice(0, mode), 2));
+                        imgdata.data[4 * i + 1] = closer(mlist[mode], imgdata.data[4 * i + 1], parseInt(k.slice(mode, mode * 2), 2));
+                        imgdata.data[4 * i + 2] = closer(mlist[mode], imgdata.data[4 * i + 2], parseInt(k.slice(mode * 2, mode * 3), 2));
+                        k = k.slice(mode * 3);
+                        i++
+                    }
+                }
+                j++
+            }
+            j = 0;
+            while (i < n) {
+                k = k + (cword.charCodeAt(j % cword.length) + 256).toString(2).slice(1);
+                for (let ii = 0; ii < aa; ii++) {
+                    if (k.length >= mode * 3) {
+                        imgdata.data[4 * i] = closer(mlist[mode], imgdata.data[4 * i], parseInt(k.slice(0, mode), 2));
+                        imgdata.data[4 * i + 1] = closer(mlist[mode], imgdata.data[4 * i + 1], parseInt(k.slice(mode, mode * 2), 2));
+                        imgdata.data[4 * i + 2] = closer(mlist[mode], imgdata.data[4 * i + 2], parseInt(k.slice(mode * 2, mode * 3), 2));
+                        k = k.slice(mode * 3);
+                        i++
+                    }
+                }
+                j++
+            }
+            cvd.putImageData(imgdata, 0, 0);
+            return cv.toDataURL();
+        }
+
+        function de(mode, imgdata) {
+            let aa = Math.ceil(3 * mode / 8);
+            let n = imgdata.width * imgdata.height;
+            let j = 0;
+            let k = "";
+            let i = 1;
+            let mlist = [1, 2, 4, 8, 16, 32, 64, 128];
+            let word = "";
+            let blist//=new Uint8Array();
+            let blength = 0;
+            while (i < n && (word.length == 0 || word.slice(-1).charCodeAt(0) > 0)) {
+                k = k + (imgdata.data[4 * i] + 256).toString(2).slice(-mode);
+                k = k + (imgdata.data[4 * i + 1] + 256).toString(2).slice(-mode);
+                k = k + (imgdata.data[4 * i + 2] + 256).toString(2).slice(-mode);
+                i++
+                for (let ii = 0; ii < aa; ii++) {
+                    if (k.length >= 8 && (word.length == 0 || word.slice(-1).charCodeAt(0) > 0)) {
+                        word = word + String.fromCharCode(parseInt(k.slice(0, 8), 2));
+                        k = k.slice(8);
+                    }
+                }
+            }
+            //word分隔符:","
+            blength = parseInt(word.split(String.fromCharCode(1))[0]);
+            if (!(blength > -1)) {
+                throw "error"
+            }
+            if (!(word.split(String.fromCharCode(1)).length > 2)) {
+                throw "error"
+            }
+            blist = new Uint8Array(blength);
+            if (k.length >= 8 && j < blength) {
+                blist[j] = parseInt(k.slice(0, 8), 2);
+                k = k.slice(8);
+                j++
+            }
+            while (i < n && j < blength) {
+                k = k + (imgdata.data[4 * i] + 256).toString(2).slice(-mode);
+                k = k + (imgdata.data[4 * i + 1] + 256).toString(2).slice(-mode);
+                k = k + (imgdata.data[4 * i + 2] + 256).toString(2).slice(-mode);
+                i++
+                for (let ii = 0; ii < aa; ii++) {
+                    if (k.length >= 8 && j < blength) {
+                        blist[j] = parseInt(k.slice(0, 8), 2);
+                        k = k.slice(8);
+                        j++
+                    }
+                }
+            }
+            return [word.split(String.fromCharCode(0))[0].split(String.fromCharCode(1)), blist]
+        }
+
+        // window.onload = function () {
+        //     let w = "<!DOCTYPE " + "html>" + document.documentElement.outerHTML;
+        //     document.getElementById("bc").href = URL.createObjectURL(new Blob([w], { type: "text/html" }))
+        // }
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- 
+    *******************************************************************************************************************
+ -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <br><br><br><br><br><br>
+    <div style="padding:0 1rem" align="center">
+        <details>
+            <summary>图片文件夹</summary>
+            <h3>表图选择</h3>
+            <div>
+                <span id="ipt4info">默认</span>&ensp;
+                <span class="iptwrap">
+                    选择表图
+                    <input id="ipt4" type="file" accept="image/*" />
+                </span>
+            </div>
+            <div style="padding-top:0.5rem">
+                <span>备注：</span>
+                <input type="text" id="textipt" />
+            </div>
+            <div>&emsp;</div>
+            <span class="iptwrap">
+                合并打包
+                <input id="ipt1" type="file" multiple />
+            </span>
+            <span class="iptwrap">
+                独立打包
+                <input id="iptpwjj" type="file" multiple />
+            </span>
+            <span class="iptwrap">
+                提取文件
+                <input id="ipt3Tpwjj" type="file" accept="image/*" multiple />
+            </span>
+            <div id="displayTpwjj" style="padding:1rem"></div>
+        </details>
+    </div>
+
+
+    <script>
+        //通用
+        (function () {
+            let table = [0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2, 0xF3B97148, 0x84BE41DE, 0x1ADAD47D, 0x6DDDE4EB, 0xF4D4B551, 0x83D385C7, 0x136C9856, 0x646BA8C0, 0xFD62F97A, 0x8A65C9EC, 0x14015C4F, 0x63066CD9, 0xFA0F3D63, 0x8D080DF5, 0x3B6E20C8, 0x4C69105E, 0xD56041E4, 0xA2677172, 0x3C03E4D1, 0x4B04D447, 0xD20D85FD, 0xA50AB56B, 0x35B5A8FA, 0x42B2986C, 0xDBBBC9D6, 0xACBCF940, 0x32D86CE3, 0x45DF5C75, 0xDCD60DCF, 0xABD13D59, 0x26D930AC, 0x51DE003A, 0xC8D75180, 0xBFD06116, 0x21B4F4B5, 0x56B3C423, 0xCFBA9599, 0xB8BDA50F, 0x2802B89E, 0x5F058808, 0xC60CD9B2, 0xB10BE924, 0x2F6F7C87, 0x58684C11, 0xC1611DAB, 0xB6662D3D, 0x76DC4190, 0x01DB7106, 0x98D220BC, 0xEFD5102A, 0x71B18589, 0x06B6B51F, 0x9FBFE4A5, 0xE8B8D433, 0x7807C9A2, 0x0F00F934, 0x9609A88E, 0xE10E9818, 0x7F6A0DBB, 0x086D3D2D, 0x91646C97, 0xE6635C01, 0x6B6B51F4, 0x1C6C6162, 0x856530D8, 0xF262004E, 0x6C0695ED, 0x1B01A57B, 0x8208F4C1, 0xF50FC457, 0x65B0D9C6, 0x12B7E950, 0x8BBEB8EA, 0xFCB9887C, 0x62DD1DDF, 0x15DA2D49, 0x8CD37CF3, 0xFBD44C65, 0x4DB26158, 0x3AB551CE, 0xA3BC0074, 0xD4BB30E2, 0x4ADFA541, 0x3DD895D7, 0xA4D1C46D, 0xD3D6F4FB, 0x4369E96A, 0x346ED9FC, 0xAD678846, 0xDA60B8D0, 0x44042D73, 0x33031DE5, 0xAA0A4C5F, 0xDD0D7CC9, 0x5005713C, 0x270241AA, 0xBE0B1010, 0xC90C2086, 0x5768B525, 0x206F85B3, 0xB966D409, 0xCE61E49F, 0x5EDEF90E, 0x29D9C998, 0xB0D09822, 0xC7D7A8B4, 0x59B33D17, 0x2EB40D81, 0xB7BD5C3B, 0xC0BA6CAD, 0xEDB88320, 0x9ABFB3B6, 0x03B6E20C, 0x74B1D29A, 0xEAD54739, 0x9DD277AF, 0x04DB2615, 0x73DC1683, 0xE3630B12, 0x94643B84, 0x0D6D6A3E, 0x7A6A5AA8, 0xE40ECF0B, 0x9309FF9D, 0x0A00AE27, 0x7D079EB1, 0xF00F9344, 0x8708A3D2, 0x1E01F268, 0x6906C2FE, 0xF762575D, 0x806567CB, 0x196C3671, 0x6E6B06E7, 0xFED41B76, 0x89D32BE0, 0x10DA7A5A, 0x67DD4ACC, 0xF9B9DF6F, 0x8EBEEFF9, 0x17B7BE43, 0x60B08ED5, 0xD6D6A3E8, 0xA1D1937E, 0x38D8C2C4, 0x4FDFF252, 0xD1BB67F1, 0xA6BC5767, 0x3FB506DD, 0x48B2364B, 0xD80D2BDA, 0xAF0A1B4C, 0x36034AF6, 0x41047A60, 0xDF60EFC3, 0xA867DF55, 0x316E8EEF, 0x4669BE79, 0xCB61B38C, 0xBC66831A, 0x256FD2A0, 0x5268E236, 0xCC0C7795, 0xBB0B4703, 0x220216B9, 0x5505262F, 0xC5BA3BBE, 0xB2BD0B28, 0x2BB45A92, 0x5CB36A04, 0xC2D7FFA7, 0xB5D0CF31, 0x2CD99E8B, 0x5BDEAE1D, 0x9B64C2B0, 0xEC63F226, 0x756AA39C, 0x026D930A, 0x9C0906A9, 0xEB0E363F, 0x72076785, 0x05005713, 0x95BF4A82, 0xE2B87A14, 0x7BB12BAE, 0x0CB61B38, 0x92D28E9B, 0xE5D5BE0D, 0x7CDCEFB7, 0x0BDBDF21, 0x86D3D2D4, 0xF1D4E242, 0x68DDB3F8, 0x1FDA836E, 0x81BE16CD, 0xF6B9265B, 0x6FB077E1, 0x18B74777, 0x88085AE6, 0xFF0F6A70, 0x66063BCA, 0x11010B5C, 0x8F659EFF, 0xF862AE69, 0x616BFFD3, 0x166CCF45, 0xA00AE278, 0xD70DD2EE, 0x4E048354, 0x3903B3C2, 0xA7672661, 0xD06016F7, 0x4969474D, 0x3E6E77DB, 0xAED16A4A, 0xD9D65ADC, 0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9, 0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D];
+            let crc32Tpwjj = window.crc32Tpwjj = (arrTpwjj, crcTpwjj) => {
+                crcTpwjj = crcTpwjj || 0;
+                let n = 0;
+                let x = 0;
+                crcTpwjj ^= -1;
+                for (let i = 0; i < arrTpwjj.length; i++) {
+                    n = (crcTpwjj ^ arrTpwjj[i]) & 0xFF;
+                    x = table[n];
+                    crcTpwjj = (crcTpwjj >>> 8) ^ x;
+                }
+                crcTpwjj ^= -1;
+                return crcTpwjj
+            };
+            return crc32Tpwjj
+        })()
+        function crc32arrTpwjj(arrTpwjj) {
+            return arrTpwjj.reduce((a, b) => crc32Tpwjj(b, a), 0)
+        }
+        function stringtoarrayTpwjj(str, ifzero) {
+            let arrTpwjj = new Uint8Array(str.length + (ifzero ? 1 : 0))
+            for (let i = 0; i < str.length; i++) {
+                arrTpwjj[i] = str.charCodeAt(i)
+            }
+            return arrTpwjj
+        }
+        function arraytostringTpwjj(arrTpwjj) {
+            return Array.from(arrTpwjj).map(x => String.fromCharCode(x)).join("")
+        }
+        function concatuint8arrayTpwjj(arrays) {
+            let length = arrays.reduce((a, b) => a + b.length, 0)
+            let result = new Uint8Array(length)
+            let start = 0
+            arrays.map(x => {
+                result.set(x, start)
+                start += x.length
+            })
+            return result
+        }
+        function utf8EncodeTpwjj(string) {
+            var utftext = "";
+            for (var n = 0; n < string.length; n++) {
+                var c = string.charCodeAt(n);
+                if (c < 128) {
+                    utftext += String.fromCharCode(c);
+                } else if ((c > 127) && (c < 2048)) {
+                    utftext += String.fromCharCode((c >> 6) | 192);
+                    utftext += String.fromCharCode((c & 63) | 128);
+                } else {
+                    utftext += String.fromCharCode((c >> 12) | 224);
+                    utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+                    utftext += String.fromCharCode((c & 63) | 128);
+                }
+            }
+            return utftext;
+        }
+        function utf8DecodeTpwjj(inputStr) {
+            
+            var outputStr = "";
+            var code1, code2, code3, code4;
+            for (var i = 0; i < inputStr.length; i++) {
+                code1 = inputStr.charCodeAt(i);
+                if (code1 < 128) {
+                    outputStr += String.fromCharCode(code1);
+                } else if (code1 < 224) {
+                    code2 = inputStr.charCodeAt(++i);
+                    outputStr += String.fromCharCode(((code1 & 31) << 6) | (code2 & 63));
+                } else if (code1 < 240) {
+                    code2 = inputStr.charCodeAt(++i);
+                    code3 = inputStr.charCodeAt(++i);
+                    outputStr += String.fromCharCode(((code1 & 15) << 12) | ((code2 & 63) << 6) | (code3 & 63));
+                } else {
+                    code2 = inputStr.charCodeAt(++i);
+                    code3 = inputStr.charCodeAt(++i);
+                    code4 = inputStr.charCodeAt(++i);
+                    outputStr += String.fromCharCode(((code1 & 7) << 18) | ((code2 & 63) << 12) | ((code3 & 63) << 6) | (code2 & 63));
+                }
+            }
+            return outputStr;
+        }
+        function dataURLtoArrayTpwjj(dataurl) {
+            let arrTpwjj = dataurl.split(','),
+                _arr = arrTpwjj[1],
+                bstr = atob(_arr),
+                n = bstr.length,
+                u8arr = new Uint8Array(n)
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n)
+            }
+            return u8arr
+        }
+        function getint32(arrTpwjj, start) {//from Uint8Array
+            start = start || 0
+            return (arrTpwjj[start] << 24) | (arrTpwjj[start + 1] << 16) | (arrTpwjj[start + 2] << 8) | arrTpwjj[start + 3]
+        }
+        function createint32Tpwjj(num) {
+            return [num >>> 24, num >>> 16 & 0xff, num >>> 8 & 0xff, num & 0xff]
+        }
+        function setint32(arrTpwjj, num, start) {
+            start = start || 0
+            arrTpwjj[start] = num >>> 24
+            arrTpwjj[start + 1] = num >>> 16 & 0xff
+            arrTpwjj[start + 2] = num >>> 8 & 0xff
+            arrTpwjj[start + 3] = num & 0xff
+        }
+    </script>
+    <script>
+        let code = getint32(stringtoarrayTpwjj("tpWj"))
+        /*
+        let codeinput=document.getElementById("ident")
+        codeinput.onchange=()=>{
+          code=getint32(stringtoarrayTpwjj(code.value))
+        }
+        */
+        function extractTpwjj(arrTpwjj, code) {
+            //png文件magic number
+            //89504e470d0a1a0a
+            if (getint32(arrTpwjj, 0) != (0x89504e47 | 0)) {
+                return false
+            }
+            code = code | 0
+            let i = 8
+            let result = []
+            while (i < arrTpwjj.length - 12) {
+                let length = getint32(arrTpwjj, i)
+                //一般情况下length不小于0
+                if (getint32(arrTpwjj, i + 4) == code) {
+                    result.push(arrTpwjj.slice(i + 8, i + 8 + length))
+                }
+                i += length + 12
+            }
+            return result
+        }
+        function unwraptofileTpwjj(arrTpwjj) {
+            
+            let i = 0
+            while (arrTpwjj[i] != 0) {
+                i++
+            }
+            let meta = JSON.parse(arraytostringTpwjj(arrTpwjj.slice(0, i)))
+            return new File([arrTpwjj.slice(i + 1).buffer], utf8DecodeTpwjj(meta.name), { type: meta.mime })
+        }
+        function decode(file, code, returnfunc) {
+            
+            let reader = new FileReader()
+            reader.readAsArrayBuffer(file)
+            reader.onload = e => {
+                let extracted = extractTpwjj(new Uint8Array(e.target.result), code)
+                if (!(extracted && extracted.length > 0)) {
+                    returnfunc(false)
+                    return
+                }
+                let result = []
+                extracted.map(x => {
+                    try {
+                        result.push(unwraptofileTpwjj(x))
+                    } catch (e) { }
+                })
+                if (result.length > 0) {
+                    returnfunc(result)
+                } else {
+                    returnfunc(false)
+                }
+            }
+        }
+
+        function wrapTpwjj(file, code, returnfunc) {
+            let reader = new FileReader(file)
+            reader.readAsArrayBuffer(file)
+            reader.onload = e => {
+                let arrTpwjj = new Uint8Array(e.target.result)
+                let meta = stringtoarrayTpwjj(JSON.stringify({
+                    name: utf8EncodeTpwjj(file.name),
+                    mime: file.type
+                }), true)
+                let ident = createint32Tpwjj(code)
+                let lengtharr = createint32Tpwjj(meta.length + arrTpwjj.length)
+                let crcarr = createint32Tpwjj(crc32arrTpwjj([ident, meta, arrTpwjj]))
+                let result = concatuint8arrayTpwjj([lengtharr, ident, meta, arrTpwjj, crcarr])
+                returnfunc(result)
+            }
+        }
+        function assembletoblob(pngarr, filearr) {
+            let l = pngarr.length
+            let arrTpwjj = concatuint8arrayTpwjj([pngarr.slice(0, l - 12)].concat(filearr).concat([pngarr.slice(l - 12)]))
+            return new Blob([arrTpwjj.buffer], { type: "image/png" })
+        }
+        function randompngarr2(text) {
+            let cvs = document.createElement("canvas")
+            let ctx = cvs.getContext("2d")
+            cvs.width = cvs.height = 400
+            ctx.fillStyle = "#ffffff"
+            ctx.fillRect(0, 0, 400, 400)
+            ctx.setTransform(1, 0, 0, 1, 50, 50)
+
+            let theta = Math.random() * 2 * Math.PI
+            ctx.fillStyle = "rgb(" + [Math.cos(theta), Math.cos(theta - Math.PI * 2 / 3), Math.cos(theta + Math.PI * 2 / 3)].map(x => x * (Math.random() + 1) * 64 + 96 + Math.random() * 64) + ")"
+
+            ctx.shadowColor = "rgba(0,0,0,0.25)"
+            ctx.shadowOffsetX = 10
+            ctx.shadowOffsetY = 10
+            ctx.shadowBlur = 15
+
+            ctx.beginPath()
+            ctx.arc(150, 150, 175, 0, Math.PI * 2)
+            ctx.closePath()
+            ctx.fill()
+
+            ctx.shadowColor = "rgba(0,0,0,0)"
+            ctx.fillStyle = ctx.strokeStyle = "#fff"
+
+            ctx.lineJoin = "round"
+            ctx.lineWidth = 16
+            ctx.beginPath()
+            ctx.moveTo(110, 50)
+            ctx.lineTo(225, 50)
+            ctx.lineTo(225, 250)
+            ctx.lineTo(75, 250)
+            ctx.lineTo(75, 85)
+            ctx.closePath()
+            ctx.stroke()
+            ctx.fillRect(105, 110, 90, 16)
+            ctx.fillRect(105, 155, 90, 16)
+            ctx.fillRect(105, 200, 90, 16)
+
+            ctx.setTransform(1, 0, 0, 1, 0, 0)
+
+            ctx.fillStyle = "#000"
+            ctx.strokeStyle = "#fff"
+            ctx.lineWidth = 4
+            ctx.font = "20px sans-serif"
+            ctx.textBaseline = "middle"
+            ctx.textAlign = "right"
+            ctx.strokeText(text, 395, 15)
+            ctx.fillText(text, 395, 15)
+
+            return dataURLtoArrayTpwjj(cvs.toDataURL("image/png"))
+        }
+        function randompngarrTpwjj(text) {
+            let cvs = document.createElement("canvas")
+            cvs.width = cvs.height = 300
+            let ctx = cvs.getContext("2d")
+            let theta = Math.random() * 2 * Math.PI
+            ctx.fillStyle = "rgb(" + [Math.cos(theta), Math.cos(theta - Math.PI * 2 / 3), Math.cos(theta + Math.PI * 2 / 3)].map(x => x * (Math.random() + 1) * 64 + 96 + Math.random() * 64) + ")"
+            ctx.fillRect(0, 0, 300, 300)
+            ctx.fillStyle = ctx.strokeStyle = "#fff"
+            ctx.lineJoin = "round"
+            ctx.lineWidth = 16
+            ctx.beginPath()
+            ctx.moveTo(110, 50)
+            ctx.lineTo(225, 50)
+            ctx.lineTo(225, 250)
+            ctx.lineTo(75, 250)
+            ctx.lineTo(75, 85)
+            ctx.closePath()
+            ctx.stroke()
+            ctx.fillRect(105, 110, 90, 16)
+            ctx.fillRect(105, 155, 90, 16)
+            ctx.fillRect(105, 200, 90, 16)
+
+            ctx.fillStyle = "#000"
+            ctx.strokeStyle = "#fff"
+            ctx.lineWidth = 4
+            ctx.font = "20px sans-serif"
+            ctx.textBaseline = "middle"
+            ctx.textAlign = "right"
+            ctx.strokeText(text, 295, 15)
+            ctx.fillText(text, 295, 15)
+
+            return dataURLtoArrayTpwjj(cvs.toDataURL("image/png"))
+        }
+
+    </script>
+    <script>
+        let def = true
+        let custompic
+        let ipt4 = document.getElementById("ipt4")
+        ipt4.onchange = () => {
+            if (ipt4.files.length == 0) {
+                def = true
+                document.getElementById("ipt4info").innerText = "默认"
+                return
+            }
+            let src = URL.createObjectURL(ipt4.files[0])
+            let img = new Image()
+            img.src = src
+            img.onload = () => {
+                URL.revokeObjectURL(src)
+                let cvs = document.createElement("canvas")
+                let ctx = cvs.getContext("2d")
+                let w = img.width
+                let h = img.height
+                if (w * h > 100000) {
+                    let scale = Math.sqrt(w * h / 100000)
+                    w = Math.round(w / scale)
+                    h = Math.round(h / scale)
+                }
+                cvs.width = w
+                cvs.height = h
+                ctx.drawImage(img, 0, 0, w, h)
+                let img2 = new Image()
+                img2.src = cvs.toDataURL("image/png")
+                img2.onload = () => {
+                    custompic = img2
+                    def = false
+                    document.getElementById("ipt4info").innerText = "自定义"
+                }
+            }
+        }
+        function addtext(img, text) {
+            if (!text) {
+                return dataURLtoArrayTpwjj(img.src)
+            }
+            let cvs = document.createElement("canvas")
+            let ctx = cvs.getContext("2d")
+            let w = img.width
+            let h = img.height
+            cvs.width = w
+            cvs.height = h
+            ctx.drawImage(img, 0, 0, w, h)
+
+            ctx.fillStyle = "#000"
+            ctx.strokeStyle = "#fff"
+            ctx.lineWidth = 4
+            ctx.font = "20px sans-serif"
+            ctx.textBaseline = "middle"
+            ctx.textAlign = "right"
+            ctx.strokeText(text, w - 5, 15)
+            ctx.fillText(text, w - 5, 15)
+
+            return dataURLtoArrayTpwjj(cvs.toDataURL("image/png"))
+        }
+        function genpngarrTpwjj(big, text) {
+            text = text || document.getElementById("textipt").value
+            if (def) {
+                if (big) {
+                    return randompngarr2(text)
+                } else {
+                    return randompngarrTpwjj(text)
+                }
+            } else {
+                return custompic["_text_" + text] || (custompic["_text_" + text] = addtext(custompic, text))
+            }
+        }
+    </script>
+    <script>
+        let srclist = []
+        let display = document.getElementById("displayTpwjj")
+        function clear() {
+            display.innerHTML = ""
+            srclist.map(x => URL.revokeObjectURL(x))
+            srclist = []
+        }
+        function createdisplayTpwjj(b) {
+            let src = URL.createObjectURL(b)
+            srclist.push(b)
+
+            let div = document.createElement("div")
+            div.style.paddingTop = "0.5rem"
+
+            let div2 = document.createElement("div")
+            div2.style.wordBreak = "break-all"
+            div.appendChild(div2)
+
+            let a = document.createElement("a")
+            a.innerText = "保存"
+            a.href = src
+            a.download = b.name
+            div2.appendChild(a)
+
+            let span = document.createElement("span")
+            span.innerText = b.name
+            span.innerHTML = "&emsp;" + span.innerHTML
+            div2.appendChild(span)
+
+            if (b.type.indexOf("image") > -1) {
+                let img = document.createElement("img")
+                img.style.maxWidth = "100%"
+                img.src = src
+                div.appendChild(img)
+            }
+
+            if (b.type.indexOf("video") > -1) {
+                let img = document.createElement("video")
+                img.controls = true
+                img.style.maxWidth = "100%"
+                img.src = src
+                div.appendChild(img)
+            }
+
+            return div
+        }
+
+
+        let ipt1 = document.getElementById("ipt1")
+        ipt1.onchange = () => {
+            clear()
+            let j = ipt1.files.length
+            let finish = []
+            Array.from(ipt1.files).map((f, x) => {
+                wrapTpwjj(f, code, r => {
+                    finish[x] = r
+                    if (--j == 0) {
+                        let src = URL.createObjectURL(assembletoblob(genpngarrTpwjj(true), finish))
+                        srclist.push(src)
+                        let img = document.createElement("img")
+                        img.src = src
+                        img.style.maxWidth = "100%"
+                        display.appendChild(img)
+                    }
+                })
+            })
+        }
+
+
+        let iptpwjj = document.getElementById("iptpwjj")
+        iptpwjj.onchange = () => {
+            clear()
+            Array.from(iptpwjj.files).map(f => {
+                wrapTpwjj(f, code, r => {
+                    
+                    let src = URL.createObjectURL(assembletoblob(genpngarrTpwjj(false), [r]))
+                    srclist.push(src)
+                    let img = document.createElement("img")
+                    img.src = src
+                    img.style.width = "100px"
+                    img.style.margin = "4px"
+                    display.appendChild(img)
+                    
+                })
+            })
+        }
+
+        let ipt3Tpwjj = document.getElementById("ipt3Tpwjj")
+        ipt3Tpwjj.onchange = () => {
+            clear()
+            let div = document.createElement("div")
+            display.appendChild(div)
+            let div2 = document.createElement("div")
+            display.appendChild(div2)
+            let count = 0
+            Array.from(ipt3Tpwjj.files).map(f => {
+                decode(f, code, r => {
+            
+                    if (r) {
+                        r.map(x => {
+                            display.appendChild(createdisplayTpwjj(x))
+                        })
+                    } else {
+                        div.innerText = "以下图片读取失败(" + (++count) + ")"
+                        let img = document.createElement("img")
+                        img.style.maxWidth = "100px"
+                        img.style.maxHeight = "100px"
+                        let src = URL.createObjectURL(f)
+                        srclist.push(src)
+                        img.src = src
+                        div2.appendChild(img)
+                        div2.style.paddingBottom = "0.5rem"
+                        div2.style.borderBottom = "1px solid #ccc"
+                    }
+                })
+            })
+        }
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- 
+    *******************************************************************************************************
+ -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <br><br><br><br><br><br>
+    <div style="padding:0 1rem" align="center">
+        <details>
+            <summary>图片化打包</summary>
+            <details>
+                <summary>打包文件</summary>
+                <div class="pad2">
+                    选择表图&ensp;
+                    <input id="ipt3" type="file" accept="image/*" multiple />
+                </div>
+                <div id="encodeipt" class="pad2">
+                    选择文件&ensp;
+                </div>
+                <div class="pad2">
+                    加密密码&ensp;
+                    <input style="width:150px;height:1.25rem" type="text" id="encodepassword"
+                        placeholder="请输入密码" />&ensp;
+                </div>
+                <div class="pad2">
+                    分片数量&ensp;
+                    <input style="width:75px" type="number" id="slice" value="1" />
+                </div>
+                <div class="pad2">
+                    <input type="checkbox" id="check1">显示备注</input>&ensp;<input type="text" id="text"
+                        style="width:150px;height:1.25rem" value="图片化打包" />
+                    <br /><input type="checkbox" id="check2">显示序号</input>
+                    <br /><input type="checkbox" id="check3">显示文件名</input>
+                    <br /><input type="checkbox" id="check4">显示文件大小</input>
+                </div>
+                <div class="pad2">
+                    <button id="pack">&ensp;打包&ensp;</button>&emsp;<span id="packinfo" style="display:none">正在打包</span>
+                </div>
+                <div class="pad2" id="display"></div>
+            </details>
+
+            <details open>
+                <summary>提取文件</summary>
+                <div id="decodeipt" class="pad1">
+                    <button id="clear">&ensp;清空&ensp;</button>&emsp;
+                </div>
+                <div class="pad1">
+                    <span id="failbutton">失败</span>&ensp;
+                    <span id="pendingbutton">待解密</span>&ensp;
+                    <span id="successbutton">成功</span>
+                </div>
+                <div id="fail">
+                    <div class="pad1">
+                        以下图片不是图片化打包!
+                    </div>
+                </div>
+                <div id="pending">
+                    <div class="pad1">
+                        <input style="width:150px;height:1.25rem" type="text" id="decodepassword"
+                            placeholder="请输入密码" />&ensp;
+                        <button id="decode">&ensp;确定&ensp;</button>
+                        &ensp;<span id="decodeinfo"></span>
+                    </div>
+                    <div id="innerpending" style="margin-bottom:0.5rem"></div>
+                    <div id="assembling"></div>
+                </div>
+                <div id="success"></div>
+            </details>
+        </details>
+    </div>
+
+
+
+
+    <script>
+        function gebi(a) {
+            return document.getElementById(a)
+        }
+        let showlist = [gebi("fail"), gebi("pending"), gebi("success")]
+        let buttonlist = [gebi("failbutton"), gebi("pendingbutton"), gebi("successbutton")]
+        showlist.map(x => x.style.display = "none")
+        buttonlist.map((x, i) => {
+            x.style.outline = "1px solid #ccc"
+            //x.style.padding="0 0.5rem"
+            x.style.display = "inline-block"
+            x.style.textAlign = "center"
+            x.style.minWidth = "64px"
+            x.onclick = () => {
+                showlist.map(x => x.style.display = "none")
+                buttonlist.map(x => x.style.background = "#fff")
+                showlist[i].style.display = "block"
+                buttonlist[i].style.background = "#eee"
+            }
+        })
+        buttonlist[1].click()
+
+        function sizec(bytes) {
+            let i = 0
+            let list = ["B", "KB", "MB", "GB", "TB"]
+            while (bytes / Math.pow(1024, i) >= 1000) {
+                i++
+            }
+            bytes = bytes / Math.pow(1024, i)
+            if (bytes > 100) {
+                bytes = Math.round(bytes)
+            } else if (bytes > 10) {
+                bytes = Math.round(bytes * 10) / 10
+            } else {
+                bytes = Math.round(bytes * 100) / 100
+            }
+            return bytes + list[i]
+        }
+        let checklist = [gebi("check1"), gebi("check2"), gebi("check3"), gebi("check4")]
+    </script>
+
+    <script>
+            //处理png的数据块
+            ; (() => {
+                let png = window.png = new Object()
+                    ; (() => {
+                        let table = [0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2, 0xF3B97148, 0x84BE41DE, 0x1ADAD47D, 0x6DDDE4EB, 0xF4D4B551, 0x83D385C7, 0x136C9856, 0x646BA8C0, 0xFD62F97A, 0x8A65C9EC, 0x14015C4F, 0x63066CD9, 0xFA0F3D63, 0x8D080DF5, 0x3B6E20C8, 0x4C69105E, 0xD56041E4, 0xA2677172, 0x3C03E4D1, 0x4B04D447, 0xD20D85FD, 0xA50AB56B, 0x35B5A8FA, 0x42B2986C, 0xDBBBC9D6, 0xACBCF940, 0x32D86CE3, 0x45DF5C75, 0xDCD60DCF, 0xABD13D59, 0x26D930AC, 0x51DE003A, 0xC8D75180, 0xBFD06116, 0x21B4F4B5, 0x56B3C423, 0xCFBA9599, 0xB8BDA50F, 0x2802B89E, 0x5F058808, 0xC60CD9B2, 0xB10BE924, 0x2F6F7C87, 0x58684C11, 0xC1611DAB, 0xB6662D3D, 0x76DC4190, 0x01DB7106, 0x98D220BC, 0xEFD5102A, 0x71B18589, 0x06B6B51F, 0x9FBFE4A5, 0xE8B8D433, 0x7807C9A2, 0x0F00F934, 0x9609A88E, 0xE10E9818, 0x7F6A0DBB, 0x086D3D2D, 0x91646C97, 0xE6635C01, 0x6B6B51F4, 0x1C6C6162, 0x856530D8, 0xF262004E, 0x6C0695ED, 0x1B01A57B, 0x8208F4C1, 0xF50FC457, 0x65B0D9C6, 0x12B7E950, 0x8BBEB8EA, 0xFCB9887C, 0x62DD1DDF, 0x15DA2D49, 0x8CD37CF3, 0xFBD44C65, 0x4DB26158, 0x3AB551CE, 0xA3BC0074, 0xD4BB30E2, 0x4ADFA541, 0x3DD895D7, 0xA4D1C46D, 0xD3D6F4FB, 0x4369E96A, 0x346ED9FC, 0xAD678846, 0xDA60B8D0, 0x44042D73, 0x33031DE5, 0xAA0A4C5F, 0xDD0D7CC9, 0x5005713C, 0x270241AA, 0xBE0B1010, 0xC90C2086, 0x5768B525, 0x206F85B3, 0xB966D409, 0xCE61E49F, 0x5EDEF90E, 0x29D9C998, 0xB0D09822, 0xC7D7A8B4, 0x59B33D17, 0x2EB40D81, 0xB7BD5C3B, 0xC0BA6CAD, 0xEDB88320, 0x9ABFB3B6, 0x03B6E20C, 0x74B1D29A, 0xEAD54739, 0x9DD277AF, 0x04DB2615, 0x73DC1683, 0xE3630B12, 0x94643B84, 0x0D6D6A3E, 0x7A6A5AA8, 0xE40ECF0B, 0x9309FF9D, 0x0A00AE27, 0x7D079EB1, 0xF00F9344, 0x8708A3D2, 0x1E01F268, 0x6906C2FE, 0xF762575D, 0x806567CB, 0x196C3671, 0x6E6B06E7, 0xFED41B76, 0x89D32BE0, 0x10DA7A5A, 0x67DD4ACC, 0xF9B9DF6F, 0x8EBEEFF9, 0x17B7BE43, 0x60B08ED5, 0xD6D6A3E8, 0xA1D1937E, 0x38D8C2C4, 0x4FDFF252, 0xD1BB67F1, 0xA6BC5767, 0x3FB506DD, 0x48B2364B, 0xD80D2BDA, 0xAF0A1B4C, 0x36034AF6, 0x41047A60, 0xDF60EFC3, 0xA867DF55, 0x316E8EEF, 0x4669BE79, 0xCB61B38C, 0xBC66831A, 0x256FD2A0, 0x5268E236, 0xCC0C7795, 0xBB0B4703, 0x220216B9, 0x5505262F, 0xC5BA3BBE, 0xB2BD0B28, 0x2BB45A92, 0x5CB36A04, 0xC2D7FFA7, 0xB5D0CF31, 0x2CD99E8B, 0x5BDEAE1D, 0x9B64C2B0, 0xEC63F226, 0x756AA39C, 0x026D930A, 0x9C0906A9, 0xEB0E363F, 0x72076785, 0x05005713, 0x95BF4A82, 0xE2B87A14, 0x7BB12BAE, 0x0CB61B38, 0x92D28E9B, 0xE5D5BE0D, 0x7CDCEFB7, 0x0BDBDF21, 0x86D3D2D4, 0xF1D4E242, 0x68DDB3F8, 0x1FDA836E, 0x81BE16CD, 0xF6B9265B, 0x6FB077E1, 0x18B74777, 0x88085AE6, 0xFF0F6A70, 0x66063BCA, 0x11010B5C, 0x8F659EFF, 0xF862AE69, 0x616BFFD3, 0x166CCF45, 0xA00AE278, 0xD70DD2EE, 0x4E048354, 0x3903B3C2, 0xA7672661, 0xD06016F7, 0x4969474D, 0x3E6E77DB, 0xAED16A4A, 0xD9D65ADC, 0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9, 0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D];
+                        let crc32 = png.crc32 = (arr, crc) => {
+                            crc = crc || 0;
+                            let nNtpwjj = 0;
+                            let x = 0;
+                            crc ^= -1;
+                            for (let i = 0; i < arr.length; i++) {
+                                nNtpwjj = (crc ^ arr[i]) & 0xFF;
+                                x = table[nNtpwjj];
+                                crc = (crc >>> 8) ^ x;
+                            }
+                            crc ^= -1;
+                            return crc
+                        }
+                    })()
+
+                function crc32arrNtpwjj(arr) {
+                    return arr.reduce((a, b) => png.crc32(b, a), 0)
+                }
+
+                function concatuint8arrayNtpwjj(arrays) {
+                    let length = arrays.reduce((a, b) => a + b.length, 0)
+                    let result = new Uint8Array(length)
+                    let start = 0
+                    arrays.map(x => {
+                        result.set(x, start)
+                        start += x.length
+                    })
+                    return result
+                }
+
+                function slicestring(arr, start, length) {
+                    let result = ""
+                    for (let i = 0; i < length; i++) {
+                        result += String.fromCharCode(arr[i + start])
+                    }
+                    return result
+                }
+
+                function stringtoarrayNtpwjj(str) {
+                    return str.split("").map(x => x.charCodeAt(0))
+                }
+
+                function stringtouint8array(str, ifzero) {
+                    let arr = new Uint8Array(str.length + (ifzero ? 1 : 0))
+                    for (let i = 0; i < str.length; i++) {
+                        arr[i] = str.charCodeAt(i)
+                    }
+                    return arr
+                }
+
+                function writestring(arr, str, start) {
+                    start = start || 0
+                    for (let i = 0; i < str.length; i++) {
+                        arr[start + i] = str.charCodeAt(i)
+                    }
+                    return arr
+                }
+
+                function getuint32(arr, start) {
+                    let result = (arr[start] << 24) | (arr[start + 1] << 16) | (arr[start + 2] << 8) | arr[start + 3]
+                    return (result < 0) ? (result + 4294967296) : result
+                }
+
+                function createint32Ntpwjj(num) {
+                    return [num >>> 24, num >>> 16 & 0xff, num >>> 8 & 0xff, num & 0xff]
+                }
+
+                function readasuint8array(blob, returnfunc) {
+                    let fr = new FileReader()
+                    fr.readAsArrayBuffer(blob)
+                    fr.onload = (e) => {
+                        returnfunc(new Uint8Array(e.target.result))
+                    }
+                }
+
+                function extractNtpwjj(arr, codeNtpwjj) {
+                    //png文件magic number
+                    //89504e470d0a1a0a
+                    if (getuint32(arr, 0) != 0x89504e47) {
+                        return false
+                    }
+                    let i = 8
+                    let result = []
+                    while (i < arr.length) {
+                        let length = getuint32(arr, i)
+                        let arrslice = arr.slice(i + 8, i + 8 + length)
+                        arrslice.chunkname = slicestring(arr, i + 4, 4)
+                        result.push(arrslice)
+                        i += length + 12
+                    }
+                    return result
+                }
+
+                function assemble(arr) {
+                    let process = arr.map(a => {
+                        let lengthchunk = createint32Ntpwjj(a.length)
+                        let namechunk = stringtoarrayNtpwjj(a.chunkname)
+                        let crcchunk = createint32Ntpwjj(crc32arrNtpwjj([namechunk, a]))
+                        return concatuint8arrayNtpwjj([lengthchunk, namechunk, a, crcchunk])
+                    })
+                    return concatuint8arrayNtpwjj([[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]].concat(process))
+                }
+
+                png.readasuint8array = readasuint8array
+                png.extractNtpwjj = extractNtpwjj
+                png.assemble = assemble
+            })();
+
+        //基础加密功能
+        ; (() => {
+            if (!window.crypto.subtle) {
+                alert("发生错误: Crypto API 不可用")
+            }
+
+            let subtle = window.crypto.subtle
+            let tankcrypto = window.tankcrypto = new Object()
+
+            function stringtouint8array(str, ifzero) {
+                let arr = new Uint8Array(str.length + (ifzero ? 1 : 0))
+                for (let i = 0; i < str.length; i++) {
+                    arr[i] = str.charCodeAt(i)
+                }
+                return arr
+            }
+
+            /*utf8*/
+            function utf8EncodeNtpwjj(string) {
+                var utftext = "";
+                for (var nNtpwjj = 0; nNtpwjj < string.length; nNtpwjj++) {
+                    var c = string.charCodeAt(nNtpwjj);
+                    if (c < 128) {
+                        utftext += String.fromCharCode(c);
+                    } else if ((c > 127) && (c < 2048)) {
+                        utftext += String.fromCharCode((c >> 6) | 192);
+                        utftext += String.fromCharCode((c & 63) | 128);
+                    } else {
+                        utftext += String.fromCharCode((c >> 12) | 224);
+                        utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+                        utftext += String.fromCharCode((c & 63) | 128);
+                    }
+                }
+                return utftext;
+            }
+            function utf8DecodeNtpwjj(inputStr) {
+                var outputStr = "";
+                var code1, code2, code3, code4;
+                for (var i = 0; i < inputStr.length; i++) {
+                    code1 = inputStr.charCodeAt(i);
+                    if (code1 < 128) {
+                        outputStr += String.fromCharCode(code1);
+                    } else if (code1 < 224) {
+                        code2 = inputStr.charCodeAt(++i);
+                        outputStr += String.fromCharCode(((code1 & 31) << 6) | (code2 & 63));
+                    } else if (code1 < 240) {
+                        code2 = inputStr.charCodeAt(++i);
+                        code3 = inputStr.charCodeAt(++i);
+                        outputStr += String.fromCharCode(((code1 & 15) << 12) | ((code2 & 63) << 6) | (code3 & 63));
+                    } else {
+                        code2 = inputStr.charCodeAt(++i);
+                        code3 = inputStr.charCodeAt(++i);
+                        code4 = inputStr.charCodeAt(++i);
+                        outputStr += String.fromCharCode(((code1 & 7) << 18) | ((code2 & 63) << 12) | ((code3 & 63) << 6) | (code2 & 63));
+                    }
+                }
+                return outputStr;
+            }
+
+            let sha256 = tankcrypto.sha256 = function (str) {
+                let input = stringtouint8array(utf8EncodeNtpwjj(str))
+                return subtle.digest("SHA-256", input)
+            }
+
+            let rawsha256 = tankcrypto.rawsha256 = function (buffer) {
+                return subtle.digest("SHA-256", buffer)
+            }
+
+            let createkey = tankcrypto.createkey = function (str) {
+                let input = stringtouint8array(utf8EncodeNtpwjj(str))
+                return subtle.digest("SHA-256", input).then((digest) => {
+                    return subtle.importKey("raw", digest, { name: "AES-CBC" }, false, ["encrypt", "decrypt"])
+                })
+            }
+
+            let createkey128 = tankcrypto.createkey128 = function (str) {
+                let input = stringtouint8array(utf8EncodeNtpwjj(str))
+                return subtle.digest("SHA-256", input).then((digest) => {
+                    return subtle.importKey("raw", digest.slice(0, 16), { name: "AES-CBC" }, false, ["encrypt", "decrypt"])
+                })
+            }
+
+            let importkey = tankcrypto.importkey = function (buffer) {
+                return subtle.importKey("raw", buffer, { name: "AES-CBC" }, false, ["encrypt", "decrypt"])
+            }
+
+            let encrypt = tankcrypto.encrypt = function (key, iv, data) {
+                return subtle.encrypt({ name: "AES-CBC", iv: iv }, key, data)
+            }
+
+            let decrypt = tankcrypto.decrypt = function (key, iv, data) {
+                return subtle.decrypt({ name: "AES-CBC", iv: iv }, key, data)
+            }
+            tankcrypto.utf8EncodeNtpwjj = utf8EncodeNtpwjj
+            tankcrypto.utf8DecodeNtpwjj = utf8DecodeNtpwjj
+
+        })();
+    </script>
+
+    <script>
+        function concatuint8arrayNtpwjj(arrays) {
+            let length = arrays.reduce((a, b) => a + b.length, 0)
+            let result = new Uint8Array(length)
+            let start = 0
+            arrays.map(x => {
+                result.set(x, start)
+                start += x.length
+            })
+            return result
+        }
+
+        function stringtouint8array(str, ifzero) {
+            let arr = new Uint8Array(str.length + (ifzero ? 1 : 0))
+            for (let i = 0; i < str.length; i++) {
+                arr[i] = str.charCodeAt(i)
+            }
+            return arr
+        }
+
+        function arraytostringNtpwjj(arr) {
+            let str = ""
+            for (let i = 0; i < arr.length; i++) {
+                str = str + String.fromCharCode(arr[i])
+            }
+            return str
+        }
+
+        let utf8DecodeNtpwjj = tankcrypto.utf8DecodeNtpwjj
+        let utf8EncodeNtpwjj = tankcrypto.utf8EncodeNtpwjj
+    </script>
+
+    <script>
+        //带校验的奇怪加密方法
+        function allenc(key, data) {
+            let iv1buffer = window.crypto.getRandomValues(new Uint8Array(16))
+            let randomdata = window.crypto.getRandomValues(new Uint8Array(968))
+            let iv2buffer = randomdata.slice(-16)
+            let key2buffer = randomdata.slice(-48, -16)
+            return new Promise((resolve, reject) => {
+                Promise.all([
+                    window.tankcrypto.importkey(key2buffer).then(key2 => {
+                        return window.tankcrypto.encrypt(key2, iv2buffer, data)
+                    }),
+                    window.tankcrypto.rawsha256(randomdata)
+                ]).then(arr => {
+                    let encryptedorigin = new Uint8Array(arr[0])
+                    let hash = new Uint8Array(arr[1])
+                    let meta = concatuint8arrayNtpwjj([hash, randomdata])
+                    window.tankcrypto.encrypt(key, iv1buffer, meta).then(encryptedmetabuffer => {
+                        let encryptedmeta = new Uint8Array(encryptedmetabuffer)
+                        let result = concatuint8arrayNtpwjj([iv1buffer, encryptedmeta, encryptedorigin])
+                        result.extra = { key: key2buffer, iv2buffer }
+                        resolve(result)
+                    }).catch(reject)
+                }).catch(reject)
+            })
+        }
+
+        //解密，顺带校验
+        function alldec(key, data) {
+            return new Promise((resolve, reject) => {
+                let iv1 = data.slice(0, 16)
+                let part1 = data.slice(16, 1024)
+                window.tankcrypto.decrypt(key, iv1, part1).then(decrypted1 => {
+                    let hash = new Uint8Array(decrypted1.slice(0, 32))
+                    window.tankcrypto.rawsha256(decrypted1.slice(32))
+                        .then(rawhash1 => {
+                            let hash1 = new Uint8Array(rawhash1)
+                            let ifcorrect = hash1.every((v, x) => v == hash[x])
+                            if (ifcorrect) {
+                                let iv2 = decrypted1.slice(-16)
+                                let key2buffer = decrypted1.slice(-48, -16)
+                                window.tankcrypto.importkey(key2buffer).then(key2 => {
+                                    return window.tankcrypto.decrypt(key2, iv2, data.slice(1024))
+                                }).then(decrypted => {
+                                    resolve(new Uint8Array(decrypted))
+                                }).catch(reject)
+                            } else {
+                                reject("incorrect password")
+                            }
+                        }).catch(reject)
+                }).catch(reject)
+            })
+        }
+    </script>
+
+    <script>
+        function dataURLtoArrayNtpwjj(dataurl) {
+            let arr = dataurl.split(','),
+                _arr = arr[1],
+                bstr = atob(_arr),
+                nNtpwjj = bstr.length,
+                u8arr = new Uint8Array(nNtpwjj)
+            while (nNtpwjj--) {
+                u8arr[nNtpwjj] = bstr.charCodeAt(nNtpwjj)
+            }
+            return u8arr
+        }
+
+        function genpngarrNtpwjj(img, text) {
+            let w = img.width
+            let h = img.height
+            if (w * h > 100000) {
+                let s = Math.sqrt(100000 / w / h)
+                w = w * s | 0
+                h = h * s | 0
+            }
+            let cvs = document.createElement("canvas")
+            let ctx = cvs.getContext("2d")
+            cvs.width = w
+            cvs.height = h
+            ctx.drawImage(img, 0, 0, w, h)
+            if (text) {
+                ctx.fillStyle = "#000"
+                ctx.strokeStyle = "#fff"
+                ctx.lineWidth = 4
+                ctx.font = "20px sans-serif"
+                ctx.textBaseline = "middle"
+                for (let i = 0; i < text.length; i++) {
+                    if (i == 0) {
+                        ctx.textAlign = "right"
+                        ctx.strokeText(text[i], w - 5, 15, w - 10)
+                        ctx.fillText(text[i], w - 5, 15, w - 10)
+                        ctx.textAlign = "left"
+                    } else {
+                        ctx.strokeText(text[i], 5, h + 10 - i * 25, w - 10)
+                        ctx.fillText(text[i], 5, h + 10 - i * 25, w - 10)
+                    }
+                }
+            }
+            return cvs.toDataURL()
+        }
+        //随机默认表图
+        function randompngarrNtpwjj(text) {
+            let cvs = document.createElement("canvas")
+            let ctx = cvs.getContext("2d")
+            cvs.width = cvs.height = 420
+
+            ctx.fillStyle = "#fff"
+            ctx.fillRect(0, 0, 420, 420)
+
+            let theta = Math.random() * Math.PI * 2
+            ctx.fillStyle = "rgb(" + [Math.cos(theta), Math.cos(theta - Math.PI * 2 / 3), Math.cos(theta + Math.PI * 2 / 3)].map(x => x * (Math.random() + 1) * 64 + 96 + Math.random() * 64) + ")"
+
+            ctx.shadowColor = "#bfbfbf"
+            ctx.shadowBlur = 15
+            ctx.shadowOffsetX = ctx.shadowOffsetY = 10
+            ctx.moveTo(375, 0)
+            ctx.beginPath()
+            let nNtpwjj = 3
+            for (let t = 0; t < Math.PI * 2; t += 0.05) {
+                let length = 1 / Math.pow(Math.pow(Math.abs(Math.cos(t)), nNtpwjj) + Math.pow(Math.abs(Math.sin(t)), nNtpwjj), 1 / nNtpwjj)
+                let x = length * Math.cos(t)
+                let y = length * Math.sin(t)
+                ctx.lineTo(x * 165 + 210, y * 165 + 210)
+            }
+            ctx.closePath()
+            ctx.fill()
+            ctx.shadowColor = "rgba(0,0,0,0)"
+
+            ctx.setTransform(1, 0, 0, 1, 60, 60)
+            ctx.fillStyle = ctx.strokeStyle = "#fff"
+            ctx.lineJoin = "round"
+            ctx.lineWidth = 16
+            ctx.beginPath()
+            ctx.moveTo(110, 50)
+            ctx.lineTo(225, 50)
+            ctx.lineTo(225, 250)
+            ctx.lineTo(75, 250)
+            ctx.lineTo(75, 85)
+            ctx.closePath()
+            ctx.stroke()
+            ctx.fillRect(105, 110, 90, 16)
+            ctx.fillRect(105, 155, 90, 16)
+            ctx.fillRect(105, 200, 90, 16)
+
+            ctx.setTransform(1, 0, 0, 1, 0, 0)
+
+            if (text) {
+                ctx.fillStyle = "#000"
+                ctx.strokeStyle = "#fff"
+                ctx.lineWidth = 4
+                ctx.font = "20px sans-serif"
+                ctx.textBaseline = "middle"
+                for (let i = 0; i < text.length; i++) {
+                    if (i == 0) {
+                        ctx.textAlign = "right"
+                        ctx.strokeText(text[i], 415, 15, 410)
+                        ctx.fillText(text[i], 415, 15, 410)
+                        ctx.textAlign = "left"
+                    } else {
+                        ctx.strokeText(text[i], 5, 430 - i * 25, 410)
+                        ctx.fillText(text[i], 5, 430 - i * 25, 410)
+                    }
+                }
+            }
+            return cvs.toDataURL()
+        }
+        //进:加密后uarr
+        //出:png的uarr
+        function picenc(img, data, key, textarr) {
+            let dataurl;
+            if (img) {
+                dataurl = genpngarrNtpwjj(img, textarr)
+            } else {
+                dataurl = randompngarrNtpwjj(textarr)
+            }
+            let dataarr = dataURLtoArrayNtpwjj(dataurl)
+            let splited = png.extractNtpwjj(dataarr)
+            let end = splited.pop()
+            return new Promise((resolve, reject) => {
+                allenc(key, data).then(encrypted => {
+                    encrypted.chunkname = "dSIG"
+                    splited.push(encrypted)
+                    splited.push(end)
+                    let assembled = png.assemble(splited)
+                    resolve(assembled)
+                }).catch(reject)
+            })
+        }
+
+        //提取数据块内容
+        function picextract(data) {
+            let splited = png.extractNtpwjj(data)
+            let i = 0
+
+            if (!splited) {
+                return { fail: true }
+            }
+            while (splited[++i].chunkname != "dSIG") {
+                if (i >= splited.length - 1) {
+                    return { fail: true }
+                }
+            }
+            return splited[i]
+        }
+    </script>
+    <script>
+        //file读成uarr
+        //返回promise
+        function readfile(file) {
+            return new Promise((resolve, reject) => {
+                let filereader = new FileReader()
+                filereader.readAsArrayBuffer(file)
+                filereader.onload = (e) => {
+                    let result = new Uint8Array(e.target.result)
+                    result.metadata = {
+                        name: utf8EncodeNtpwjj(file.name),
+                        mime: file.type,
+                        length: result.length
+                    }
+                    resolve(result)
+                }
+                filereader.onerror = reject
+            })
+        }
+        //进:file，出:待加密的东西
+        //返回promise
+        function wrapNtpwjj(filearr, slice) {
+
+            return Promise.all(Array.from(filearr).map(file => readfile(file)))
+                .then(arr => {
+                    let result = []
+                    let dataarr = concatuint8arrayNtpwjj(arr)
+                    let length = dataarr.length
+
+                    if (slice < 0) {
+                        slice = Math.ceil(-length / slice)
+                    }
+
+                    let meta = {
+                        id: "A00" + Math.random().toString(16).slice(2),
+                        slice: slice,
+                        data: arr.map(x => x.metadata)
+                    }
+
+
+                    for (let i = 0; i < slice; i++) {
+                        let slicebyte = dataarr.slice(Math.floor(length * i / slice), Math.floor(length * (i + 1) / slice))
+                        meta.count = i
+                        meta.length = slicebyte.length
+                        let metaarr = stringtouint8array(JSON.stringify(meta), true)
+                        result.push(concatuint8arrayNtpwjj([metaarr, slicebyte]))
+                        delete meta.data
+                    }
+                    return result
+                })
+        }
+        //同步
+
+        //分离meta与data
+        function unwrapsingle(arr) {
+            let i = 0
+            while (arr[++i] != 0);
+            let meta = JSON.parse(arraytostringNtpwjj(arr.slice(0, i)))
+            let data = arr.slice(i + 1)
+            if (meta.length) {
+                data = data.slice(0, meta.length)
+            }
+            data.meta = meta
+            return data
+        }
+        //拼接分离出的data，转成file
+        function unwraptofile(dataarr) {
+            let block = concatuint8arrayNtpwjj(dataarr)
+
+            let filemeta = dataarr[0].meta.data
+
+            let pointer = 0
+            let result = []
+            for (let jNtpwjj = 0; jNtpwjj < filemeta.length; jNtpwjj++) {
+                let filebuffer = block.buffer.slice(pointer, pointer + filemeta[jNtpwjj].length)
+                pointer += filemeta[jNtpwjj].length
+                let name = utf8DecodeNtpwjj(filemeta[jNtpwjj].name)
+                let mime = filemeta[jNtpwjj].mime
+                let file = new File([filebuffer], name, { type: mime })
+                result.push(file)
+            }
+            return result
+        }
+    </script>
+    <script>
+        //创建缩略图
+        function createresize(file) {
+            let imgelement = document.createElement("img")
+            imgelement.style.width = "120px"
+            file.imgelement = imgelement
+            let cvs = document.createElement("canvas")
+            let ctx = cvs.getContext("2d")
+            cvs.width = cvs.height = 250
+            let img = new Image()
+            img.src = URL.createObjectURL(file)
+            img.onload = () => {
+                URL.revokeObjectURL(img.src)
+                ctx.drawImage(img, 0, 0, 250, 250)
+                imgelement.src = cvs.toDataURL("image/jpeg", 0.5)
+            }
+        }
+        let assembler = {
+            div: document.createElement("div"),//成功
+            adiv: document.createElement("div"),//
+            pdiv: document.createElement("div"),//
+            fdiv: document.createElement("div"),//失败
+            assembling: {},
+            pending: [],
+            fail: [],
+            srclist: []
+        }
+
+        assembler.change = function () {
+            assembler.adiv.innerHTML = ""
+            assembler.pdiv.innerHTML = ""
+            assembler.fdiv.innerHTML = ""
+            assembler.pending.map(x => assembler.pdiv.appendChild(x.imgelement))
+            assembler.fail.map(x => assembler.fdiv.appendChild(x.imgelement))
+
+            for (let id in assembler.assembling) {
+                let assembling = assembler.assembling[id]
+                if (!assembling.success) {
+                    let div = document.createElement("div")
+                    div.style.outline = "1px solid #ccc"
+                    let div1 = document.createElement("div")
+                    div.appendChild(div1)
+
+                    let slice = assembling.array.length
+                    let count = 0
+                    assembling.array.map(x => {
+                        count++
+                        div.appendChild(x.imgelement)
+                    })
+
+                    div1.innerText = "进度 " + count + "/" + slice
+
+                    assembler.adiv.appendChild(div)
+                }
+            }
+
+        }
+        assembler.push = function (arr/*of files*/) {
+            arr = Array.from(arr)
+
+            arr.map(x => createresize(x))
+
+            return Promise.all(arr.map(x => {
+                return readfile(x).then(y => {
+                    let result = picextract(y)
+                    result.imgelement = x.imgelement
+                    return result
+                })
+            })).then(resultarr => {
+                let pendingpart = resultarr.filter(x => !x.fail)
+                assembler.pending = assembler.pending.concat(pendingpart)
+                let failpart = resultarr.filter(x => x.fail)
+                assembler.fail = assembler.fail.concat(failpart)
+
+                assembler.change()
+                return [pendingpart.length, failpart.length]
+
+            })
+        }
+        assembler.trydec = function (key) {
+            return Promise.all(assembler.pending.map(x => alldec(key, x)
+                .then(result => {
+                    let r = unwrapsingle(result)
+                    r.success = true
+                    r.imgelement = x.imgelement
+
+                    return r
+                }, (e) => {
+
+                    return x
+                }))).then(arr => {
+                    let successpart = arr.filter(x => x.success)
+                    let failpart = arr.filter(x => !x.success)
+
+                    if (successpart.length == 0) {
+                        return 0
+                    }
+
+                    assembler.pending = failpart
+
+                    successpart.map(x => assembler.assemble(x))
+
+                    assembler.change()
+
+                    return successpart.length
+                })
+        }
+        assembler.assemble = function (data/*of single slice*/) {
+            if (!assembler.assembling[data.meta.id]) {
+                assembler.assembling[data.meta.id] = {
+                    array: new Array(data.meta.slice)
+                }
+            }
+            let assembling = assembler.assembling[data.meta.id]
+            if (assembling.success) {
+                return
+            }
+            assembling.array[data.meta.count] = data
+
+            let flag = true
+            for (let i = 0; i < assembling.array.length; i++) {
+                flag = (!!assembling.array[i]) && flag
+            }
+            if (flag) {
+                assembling.success = true
+
+                //强制异步，防止太慢影响解密结果显示
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        let files = unwraptofile(assembling.array)
+                        assembler.createdisplayNtpwjj(files)
+                        delete assembling.array
+                    })
+                })
+
+            }
+        }
+        assembler.createdisplayNtpwjj = function (arr/*of files*/) {
+            let div = document.createElement("div")
+            div.style.outline = "1px solid #ccc"
+            div.style.paddingBottom = "0.5rem"
+            arr.map(f => div.appendChild(assembler.createsingledisplay(f)))
+            assembler.div.appendChild(div)
+            assembler.div.dispatchEvent(new CustomEvent("successupdate"))
+        }
+        assembler.createsingledisplay = function (b) {
+            let src = URL.createObjectURL(b)
+            assembler.srclist.push(b)
+
+            let div = document.createElement("div")
+            div.style.paddingTop = "0.5rem"
+
+            let div2 = document.createElement("div")
+            div2.style.wordBreak = "break-all"
+            div.appendChild(div2)
+
+            let a = document.createElement("a")
+            a.innerText = "保存"
+            a.href = src
+            a.download = b.name
+            div2.appendChild(a)
+
+            let span = document.createElement("span")
+            span.innerText = b.name
+            span.innerHTML = "&emsp;" + span.innerHTML
+            div2.appendChild(span)
+
+            if (b.type.indexOf("image") > -1) {
+                let img = document.createElement("img")
+                img.style.maxWidth = "100%"
+                img.src = src
+                div.appendChild(img)
+            }
+
+            if (b.type.indexOf("video") > -1) {
+                let img = document.createElement("video")
+                img.controls = true
+                img.style.maxWidth = "100%"
+                img.src = src
+                div.appendChild(img)
+            }
+
+            if (b.type.indexOf("text") > -1) {
+                let ddiv = document.createElement("div")
+                ddiv.style.outline = "1px solid #ccc"
+                ddiv.style.margin = ddiv.style.padding = "0.5rem"
+                ddiv.style.maxHeight = "calc(100vh - 2rem)"
+                ddiv.style.overflow = "auto"
+                div.appendChild(ddiv)
+                let fr = new FileReader()
+                fr.readAsText(b)
+                fr.onload = (e) => {
+                    ddiv.innerText = e.target.result
+                }
+            }
+            return div
+        }
+    </script>
+    <script>
+        function make(img, files, key, slice, text, iffilename, iffilesize, ifcount) {
+            text = text || ""
+            slice = slice || 1
+            return wrapNtpwjj(files, slice)
+                .then(array => Promise.all(array.map((data, i) => {
+                    let texts = [text]
+                    if (iffilename) {
+                        texts.push(files[0].name + ((files.length > 1) ? "等" : ""))
+                    }
+                    if (iffilesize) {
+                        texts.push(sizec(data.length))
+                    }
+                    if (ifcount) {
+                        texts.push((i + 1) + "/" + array.length)
+                    }
+                    let img1 = (img.length == 0) ? null : img[i % img.length]
+                    return picenc(img1, data, key, texts).then(uarr => new Blob([uarr.buffer], { type: "image/png" }))
+                })))
+        }
+    </script>
+    <script>
+        document.getElementById("successbutton").addEventListener("click", () => {
+            let sb = document.getElementById("successbutton")
+            sb.successcount = 0
+            sb.innerText = "成功"
+        })
+        assembler.div.addEventListener("successupdate", () => {
+            let sb = document.getElementById("successbutton")
+            sb.successcount = sb.successcount || 0
+            sb.innerText = "成功(" + (++sb.successcount) + ")"
+        })
+        document.getElementById("fail").appendChild(assembler.fdiv)
+        document.getElementById("innerpending").appendChild(assembler.pdiv)
+        document.getElementById("assembling").appendChild(assembler.adiv)
+        document.getElementById("success").appendChild(assembler.div)
+        document.getElementById("decode").onclick = () => {
+            let keytext = document.getElementById("decodepassword").value
+
+            tankcrypto.createkey(keytext)
+                .then(key => assembler.trydec(key))
+                .then(i => document.getElementById("decodeinfo").innerText = (i == 0) ? "密码错误" : ("成功解密" + i + "个"))
+                .catch(() => { })
+
+        }
+        document.getElementById("clear").onclick = () => {
+            assembler.assembling = {}
+            assembler.pending = []
+            assembler.fail = []
+            assembler.div.innerHTML = ""
+            assembler.adiv.innerHTML = ""
+            assembler.pdiv.innerHTML = ""
+            assembler.fdiv.innerHTML = ""
+            assembler.srclist.map(x => URL.revokeObjectURL(x))
+            assembler.srclist = []
+        }
+    </script>
+    <script>
+        let FILES = []
+        let SRCS = []
+        let IMG = []
+
+        let ipt = document.createElement("input")
+        ipt.type = "file"
+        ipt.multiple = true
+        document.getElementById("encodeipt").appendChild(ipt)
+        ipt.onchange = () => {
+            FILES = Array.from(ipt.files)
+        }
+        document.getElementById("pack").onclick = () => {
+            document.getElementById("display").innerHTML = ""
+            SRCS.map(x => URL.revokeObjectURL(x))
+            SRCS = []
+            if (FILES.length == 0) {
+                alert("请先选择文件")
+                return
+            }
+
+            document.getElementById("packinfo").style.display = "inline"
+
+            tankcrypto.createkey(document.getElementById("encodepassword").value)
+                .then(key => {
+                    return make(IMG, FILES, key,
+                        parseInt(document.getElementById("slice").value),
+                        checklist[0].checked ? document.getElementById("text").value : "",
+                        checklist[2].checked, checklist[3].checked, checklist[1].checked)
+                })
+                .then(blobs => blobs.map(b => {
+                    let src = URL.createObjectURL(b)
+                    SRCS.push(src)
+                    let imgbox = createimg(src)
+                    document.getElementById("display").appendChild(imgbox)
+                }))
+                .then(() => {
+                    document.getElementById("packinfo").style.display = "none"
+                })
+        }
+
+        function createimg(src) {
+            let img = document.createElement("img")
+            img.style.maxWidth = "100%"
+            img.src = src
+            return img
+        }
+        document.getElementById("failbutton").addEventListener("click", () => {
+            let fb = document.getElementById("failbutton")
+            fb.failcount = 0
+            fb.innerText = "失败"
+        })
+
+        let ipntpwjj = document.createElement("input")
+        ipntpwjj.type = "file"
+        ipntpwjj.accept = "image/png"
+        ipntpwjj.multiple = true
+        document.getElementById("decodeipt").appendChild(ipntpwjj)
+        ipntpwjj.onchange = () => {
+            assembler.push(ipntpwjj.files).then(status => {
+                if (status[1] > 0) {
+
+                    let fb = document.getElementById("failbutton")
+
+                    fb.failcount = fb.failcount || 0
+                    fb.failcount += status[1]
+
+                    fb.innerText = "失败(" + fb.failcount + ")"
+
+
+                }
+            }).then(() => {
+                tankcrypto.createkey("")
+                    .then(key => assembler.trydec(key))
+                    .then(i => document.getElementById("decodeinfo").innerText = (i == 0) ? "" : ("自动解密" + i + "个"))
+                    .catch(() => { })
+            })
+        }
+
+        let ipt3 = document.getElementById("ipt3")
+        ipt3.onchange = () => {
+            Promise.all(Array.from(ipt3.files).map(file => new Promise((resolve, reject) => {
+                let img = new Image()
+                img.src = URL.createObjectURL(file)
+                img.onload = () => {
+                    URL.revokeObjectURL(img.src)
+                    resolve(img)
+                }
+            }))).then(array => {
+                IMG = array
+            })
+        }
+    </script>
+
+</body>
+
+</html>
