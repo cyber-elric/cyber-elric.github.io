@@ -1,55 +1,55 @@
 # This is a basic workflow to help you get started with Actions
 
-name: bing_daily_wallpaper
+#name: bing_daily_wallpaper
 
 # Controls when the action will run. 
-on:
+#on:
   # Triggers the workflow on push or pull request events but only for the main branch
   # push:
     # branches: [ main ]
   # pull_request:
     # branches: [ main ]
-  schedule:
+  #schedule:
     # minute hour day month week
-    - cron: '1 16 * * *'
+    #- cron: '1 16 * * *'
 
   # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+  #workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
+#jobs:
   # This workflow contains a single job called "build"
-  bing:
+  #bing:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    #runs-on: ubuntu-latest
     # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
+    #steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      #- uses: actions/checkout@v2
     
-      - uses: actions/setup-python@v1
-        with:
-          python-version: 3.8
+      #- uses: actions/setup-python@v1
+        #with:
+          #python-version: 3.8
       
-      - name: requirements
-        run: 
+      #- name: requirements
+        #run: 
           # cd img
-          pip install -r requirements.txt
+          #pip install -r requirements.txt
           
-      - name: py
-        run: 
+      #- name: py
+        #run: 
           # cd img
-          python bing.py
+          #python bing.py
           
-      - name: commit
-        run: |
-          git config --local user.email elricleung@126.com
-          git config --local user.name cyber-elric
-          git add .
-          git commit -m 'bing daily wallpaper' -a
+      #- name: commit
+        #run: |
+          #git config --local user.email elricleung@126.com
+          #git config --local user.name cyber-elric
+          #git add .
+          #git commit -m 'bing daily wallpaper' -a
           
-      - uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      #- uses: ad-m/github-push-action@master
+        #with:
+          #github_token: ${{ secrets.GITHUB_TOKEN }}
           
         
